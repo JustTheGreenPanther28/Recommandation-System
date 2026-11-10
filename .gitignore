@@ -1,4 +1,7 @@
 .venv/
 .idea/
-*.pkl
+.ipynb_checkpoints/
 *.csv
+/similarity.pkl
+/movies.pkl
+/movies_dict.pkl

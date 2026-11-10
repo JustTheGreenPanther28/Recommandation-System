@@ -1,15 +1,24 @@
+import os
 import pickle as pkl
 import pandas as pd
 import streamlit as st
 import requests
 
 BASE = "https://image.tmdb.org/t/p/w500"
-PLACEHOLDER = "https://via.placeholder.com/500x750?text=No+Poster"
+PLACEHOLDER = "https://placehold.co/500x750?text=No+Poster"
+HERE = os.path.dirname(os.path.abspath(__file__))
+API_KEY = "8265bd1679663a7ea12ac168da84d2e8"
 
-movies = pd.DataFrame(pkl.load(open('movies_dict.pkl', 'rb')))
-similarity = pkl.load(open('similarity.pkl', 'rb'))
 
-# find the TMDB id column, whatever it is called in your pickle
+@st.cache_resource
+def load_data():
+    movies = pd.DataFrame(pkl.load(open(os.path.join(HERE, 'movies_dict.pkl'), 'rb')))
+    similarity = pkl.load(open(os.path.join(HERE, 'similarity.pkl'), 'rb'))
+    return movies, similarity
+
+
+movies, similarity = load_data()
+
 ID_COL = next((c for c in ('movie_id', 'id') if c in movies.columns), None)
 if ID_COL is None:
     st.error(f"No TMDB id column found. Columns available: {list(movies.columns)}")
@@ -24,9 +33,8 @@ def fetch_poster(movie_id):
     try:
         response = requests.get(
             f'https://api.themoviedb.org/3/movie/{movie_id}',
-            params={'api_key': 'API_KEY', 'language': 'en-US'},
+            params={'api_key': API_KEY, 'language': 'en-US'},
             timeout=10,
-
         )
         response.raise_for_status()
         path = response.json().get('poster_path')
@@ -52,7 +60,6 @@ def recommend(movie_name):
 
 if st.button('Recommend'):
     names, posters = recommend(selected_movie_name)
-
     cols = st.columns(5)
     for i, col in enumerate(cols):
         with col:
